@@ -6,6 +6,7 @@
 # and how to use it for classification
 #
 # Do the following experiments:
+# - increase/decrease number of neurons per layer
 # - change transfer functions
 # - change nr of layers
 
@@ -43,8 +44,8 @@ LEARN_RATE = 0.001
 
 MINI_BATCH_SIZE = 100
 NR_NEURONS_INPUT   = 2
-NR_NEURONS_HIDDEN1 = 100 # nr of neurons in 1st hidden layer
-NR_NEURONS_HIDDEN2 = 3 # nr of neurons in 2nd hidden layer
+NR_NEURONS_HIDDEN1 = 10 # nr of neurons in 1st hidden layer
+NR_NEURONS_HIDDEN2 = 5  # nr of neurons in 2nd hidden layer
 NR_NEURONS_OUTPUT  = 2
 
 # save images?
@@ -61,7 +62,7 @@ weights = {
     'h2': tf.Variable(tf.random_normal(
         [NR_NEURONS_HIDDEN1, NR_NEURONS_HIDDEN2])),
     'out': tf.Variable(tf.random_normal(
-        [NR_NEURONS_HIDDEN1, NR_NEURONS_OUTPUT]))
+        [NR_NEURONS_HIDDEN2, NR_NEURONS_OUTPUT]))
 }
 biases = {
     'b1': tf.Variable(tf.random_normal(
@@ -95,17 +96,17 @@ def multilayer_perceptron(x, weights, biases):
     # hidden layer #1 with RELU
     layer_1 = tf.add(tf.matmul(x, weights['h1']),
                      biases['b1'])
-    #layer_1 = tf.nn.relu(layer_1)
+    layer_1 = tf.nn.relu(layer_1)
     #layer_1 = tf.nn.sigmoid(layer_1)
 
     # hidden layer #2 with RELU
-    #layer_2 = tf.add(tf.matmul(layer_1, weights['h2']),
-    #                 biases['b2'])
-    #layer_2 = tf.nn.relu(layer_2)
+    layer_2 = tf.add(tf.matmul(layer_1, weights['h2']),
+                     biases['b2'])
+    layer_2 = tf.nn.relu(layer_2)
     #layer_2 = tf.nn.sigmoid(layer_2)
 
     # output layer with linear activation (no RELUs!)
-    out_layer = tf.matmul(layer_1, weights['out'])\
+    out_layer = tf.matmul(layer_2, weights['out'])\
                 + biases['out']
 
     # return the MLP model
@@ -381,7 +382,6 @@ def step3_MLP_training(data_samples, optimizer, mlp_output_vec,
             print("Time needed to train one epoch: ",
                   end - start, "sec")
 
-            print("Now testing the MLP...")
             visualize_decision_boundaries(my_session,
                                           epoch_nr,
                                           x_in,
