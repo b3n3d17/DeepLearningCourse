@@ -1,5 +1,5 @@
 # Experiments to understand how the numbers of layers
-# influence to classification rate of a CNN.
+# influence the classification rate of a CNN.
 # ---
 # by Prof. Dr.-Ing. Jürgen Brauer, www.juergenbrauer.org
 
@@ -13,6 +13,7 @@ from keras.layers.core import Dense, Dropout, Activation, Flatten
 from keras.layers.convolutional import Conv2D, MaxPooling2D, ZeroPadding2D
 from keras.layers.normalization import BatchNormalization
 from keras.models import load_model
+from keras import backend as K
 
 
 import cv2
@@ -347,6 +348,13 @@ def main():
 
 
     my_logger.close()
+
+    # due to strange error message:
+    #   TypeError: 'NoneType' object is not callable
+    # I used the approach of Nimi42, see:
+    # see https://github.com/tensorflow/tensorflow/issues/8652
+    K.clear_session()
+
 
 main()
 
