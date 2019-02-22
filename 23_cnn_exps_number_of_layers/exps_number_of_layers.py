@@ -6,6 +6,7 @@
 
 import numpy as np
 
+import tensorflow as tf
 import keras
 from keras.utils import to_categorical
 from keras import Sequential
@@ -49,6 +50,7 @@ my_logger = html_logger( LOG_FILENAME )
 def version_checks():
 
     my_logger.log_msg( "Your NumPy version is: " + np.__version__ )
+    my_logger.log_msg( "Your TensorFlow version is: " + tf.__version__)
     my_logger.log_msg( "Your Keras version is: " + keras.__version__ )
     my_logger.log_msg( "Your OpenCV version is: " + cv2.__version__ )
 
@@ -186,7 +188,7 @@ def build_a_cnn_model(nr_layers):
     # Feature hierarchy:
     for layer_nr in range(nr_layers):
 
-        model.add(Conv2D(32, kernel_size=(11, 11), strides=(2, 2),
+        model.add(Conv2D(32, kernel_size=(4, 4), strides=(2, 2),
                          activation='relu',
                          input_shape=THE_INPUT_SHAPE))
         model.add(MaxPooling2D(pool_size=(2, 2), strides=(2, 2)))
@@ -305,46 +307,56 @@ def main():
     Y_test_one_hot_encoded = to_categorical(Y_test)
 
 
-    experiment_nr = 1
-    exp_name = str(experiment_nr).zfill(2)
-    my_logger.log_msg("")
-    my_logger.log_msg("-----------------------")
-    my_logger.log_msg("Experiment: " + exp_name)
-    my_logger.log_msg("-----------------------")
-    my_logger.log_msg("")
+    # 5. Do experiments!
+    experiment_nr = 0
+    for EXP_PARAM_NR_LAYERS in range(1,4):
+
+        # 5.1 Write experiment info to logfile
+        experiment_nr += 1
+        exp_name = str(experiment_nr).zfill(2)
+        my_logger.log_msg("")
+        my_logger.log_msg("-----------------------")
+        my_logger.log_msg("Experiment: " + exp_name)
+        my_logger.log_msg("-----------------------")
+        my_logger.log_msg("Nr of conv/max-pool layers: " + str(EXP_PARAM_NR_LAYERS) )
+        my_logger.log_msg("")
 
 
-    # Build a model
-    model = build_a_cnn_model(3)
-    model.compile(optimizer='adam', loss='categorical_crossentropy', metrics=['accuracy'])
-    stringlist = []
-    model.summary(print_fn=lambda x: stringlist.append(x))
-    short_model_summary = "\n<br>".join(stringlist)
-    my_logger.log_msg( short_model_summary )
+        # 5.2 Build a CNN model
+        model = build_a_cnn_model(EXP_PARAM_NR_LAYERS)
+        model.compile(optimizer='adam', loss='categorical_crossentropy', metrics=['accuracy'])
+        stringlist = []
+        model.summary(print_fn=lambda x: stringlist.append(x))
+        short_model_summary = "\n<br>".join(stringlist)
+        my_logger.log_msg( short_model_summary )
 
 
-    # Train the model
-    history = model.fit(X_train, Y_train_one_hot_encoded,
-                        validation_split=0.90, batch_size=64, epochs=NR_EPOCHS_TO_TRAIN)
+        # 5.3 Train the model
+        history = model.fit(X_train, Y_train_one_hot_encoded,
+                            validation_split=0.90, batch_size=64, epochs=NR_EPOCHS_TO_TRAIN)
 
 
-    # Save the model
-    model_filename = "experiment_" + exp_name + ".keras_model"
-    if os.path.exists(model_filename):
-        os.remove(model_filename)
-    model.save( model_filename, overwrite=True )
+        # 5.4 Save the model
+        model_filename = "exp_" + exp_name + ".keras_model"
+        if os.path.exists(model_filename):
+            os.remove(model_filename)
+        my_logger.log_msg( "Saving model to file " + model_filename )
+        model.save( model_filename, overwrite=True )
 
 
-    # Plot curves
-    plot_curves(history, exp_name)
+        # 5.5 Plot curves
+        plot_curves(history, exp_name)
 
 
-    # Forget the model
-    del(model)
+        # 5.6 Forget the model
+        del(model)
 
 
-    # Test the model
-    test_model(model_filename, X_test, Y_test_one_hot_encoded)
+        # 5.7 Test the model
+        test_model(model_filename, X_test, Y_test_one_hot_encoded)
+
+
+    # end-for (EXP_PARAM_NR_LAYERS)
 
 
     my_logger.close()
