@@ -40,10 +40,11 @@ NUM_CLASSES = 2
 THE_INPUT_SHAPE = (IMG_SIZE[0], IMG_SIZE[1], 3)
 
 NR_EPOCHS_TO_TRAIN = 1
-NR_IMAGES_TO_TEST = 10
 
 LOG_FILENAME = "logfile.html"
 my_logger = html_logger( LOG_FILENAME )
+
+exp_result_dict = {}
 
 
 
@@ -255,37 +256,57 @@ def test_model(model_filename, X_test, Y_test_one_hot_encoded):
 
 
     # 3. Now go through all test images
-    for test_img_nr in range(0, min(NR_IMAGES_TO_TEST, nr_test_images)):
+    correct_classified = 0
+    for test_img_nr in range(0, nr_test_images):
 
-        # get the image from the 4D NumPy array
+        # 3.1 Get the image from the 4D NumPy array
         img_data = X_test[test_img_nr]
 
-        # get ground truth label for this image
+        # 3.2 Get ground truth label for this image
         gt_label = np.argmax(Y_test_one_hot_encoded[test_img_nr])
         my_logger.log_msg("Ground truth label is: " + str(gt_label))
 
-        # let our trained model predict the class!
+        # 3.3 Let our trained model predict the class!
         img_data_as_4d_array = img_data.reshape((-1,
                                                  img_data.shape[0],
                                                  img_data.shape[1],
                                                  img_data.shape[2])
-                                                )
+                                               )
+
+        # 3.4 Get prediction result from neuron outputs
         neuron_outputs = model.predict(img_data_as_4d_array)
         predicted_label = np.argmax(neuron_outputs.reshape(-1))
         my_logger.log_msg("Predicted label is: " + str(predicted_label))
         my_logger.log_msg("Neuron outputs are: " + str(neuron_outputs))
 
-        # convert NumPy data back to an OpenCV image
+        # 3.5 Convert NumPy data back to an OpenCV image
         # in order to display it correctly
         testimg = scipy.misc.toimage(img_data)
 
-        # prepare a plot with the testimg
+        # 3.6 Log image to html logfile
         plt.cla()
         plt.imshow(testimg)
-
-
-        # log image to html logfile
         my_logger.log_pyplot(plt)
+
+        # 3.7 Update statistics of correct classified examples
+        if predicted_label == gt_label:
+            correct_classified +=1
+
+
+    # 4. Compute classification rate
+    classification_rate = float(correct_classified) / float(nr_test_images)
+    my_logger.log_msg( "Test results: " +
+                       "Correct classified: " +
+                       str(correct_classified) +
+                       " of " +
+                       str(nr_test_images) +
+                       " --> classification rate: " +
+                       str(classification_rate
+                           )
+                     )
+
+    return classification_rate
+
 
 
 def main():
@@ -355,7 +376,18 @@ def main():
 
 
         # 5.7 Test the model
-        test_model(model_filename, X_test, Y_test_one_hot_encoded)
+        classification_rate = test_model(model_filename, X_test, Y_test_one_hot_encoded)
+
+
+        # 5.8 Save classification rate
+        exp_result_dict[experiment_nr] = classification_rate
+
+
+        # 5.9 Write all results into one line in log file
+        my_logger.log_msg("All experiment results so far:")
+        for key, val in exp_result_dict.items():
+            msg = "{} -> {}".format(key, val)
+            my_logger.log_msg( msg )
 
 
     # end-for (EXP_PARAM_NR_LAYERS)
