@@ -246,9 +246,9 @@ def test_model(model_filename, X_test, Y_test_one_hot_encoded):
     # 1. Show log message in log file
     #    that we now will test the model
     nr_test_images = X_test.shape[0]
-    my_logger.log_msg("Now testing model :" + model_filename)
-    my_logger.log_msg("Nr of test images :" + str(nr_test_images))
-    my_logger.log_msg("Shape of X_test :" + str(X_test.shape))
+    my_logger.log_msg("Now testing model : " + model_filename)
+    my_logger.log_msg("Nr of test images : " + str(nr_test_images))
+    my_logger.log_msg("Shape of X_test : " + str(X_test.shape))
 
     # 2. Reload the model
     model = load_model(model_filename)
@@ -280,7 +280,9 @@ def test_model(model_filename, X_test, Y_test_one_hot_encoded):
         testimg = scipy.misc.toimage(img_data)
 
         # prepare a plot with the testimg
+        plt.cla()
         plt.imshow(testimg)
+
 
         # log image to html logfile
         my_logger.log_pyplot(plt)
