@@ -305,6 +305,8 @@ def test_model(model_filename, X_test, Y_test_one_hot_encoded):
 
         # 3.6 Log image to html logfile
         plt.cla()
+        plt.title("Test image {} of {}.\nGT={} vs. Predicted={}".
+                  format(test_img_nr+1, nr_test_images, gt_label, predicted_label))
         plt.imshow(testimg)
         my_logger.log_pyplot(plt)
 
