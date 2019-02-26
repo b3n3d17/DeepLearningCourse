@@ -3,10 +3,12 @@
 # ---
 # by Prof. Dr.-Ing. Jürgen Brauer, www.juergenbrauer.org
 
+
 # if Develop mode is activated,
 # we do not read in all the data,
 # do not do all experiments in full length
 DEVELOP_MODE = True
+
 
 import numpy as np
 
@@ -353,7 +355,7 @@ def main():
 
 
     # 5. Define experiment ranges
-    EXP_RANGE_LAYERS = [0,1,2,3]
+    EXP_RANGE_LAYERS = [1,2,3]
     EXP_RANGE_DROPOUT = [0.0, 0.25, 0.5, 0.75]
     EXP_RANGE_KERNEL_SIDE_LEN = [2,4,8,16]
     EXP_RANGE_NR_FILTERS = [32, 64, 128, 256]
@@ -442,18 +444,24 @@ def main():
                     classification_rate = test_model(model_filename, X_test, Y_test_one_hot_encoded)
 
 
-                    # 6.8 Save classification rate
+                    # 6.8 Remove the model file
+                    #     (For many experiments we could run out of quota on PaperSpace)
+                    if os.path.exists(model_filename):
+                        os.remove(model_filename)
+
+
+                    # 6.9 Save classification rate
                     exp_result_dict[exp_description_str] = classification_rate
 
 
-                    # 6.9 Show experiment end time and experiment duration
+                    # 6.10 Show experiment end time and experiment duration
                     time_end = time.time()
                     exp_duration_sec = time_end - time_start
                     my_logger.log_msg("Experiment " +
                                       exp_name +
                                       " duration: {:.2f} seconds".
                                       format(exp_duration_sec) +
-                                      " seconds = {:.2f} minutes".
+                                      " = {:.2f} minutes".
                                       format(exp_duration_sec/60)
                                       )
                     experiment_times.append( exp_duration_sec )
@@ -466,7 +474,7 @@ def main():
                                       " = {:.2f} minutes".format(est_remaining_time,
                                                                  est_remaining_time/60.0) )
 
-                    # 6.10 Write all results into one line in log file
+                    # 6.11 Write all results into one line in log file
                     my_logger.log_msg("All experiment results so far:")
                     for key, val in exp_result_dict.items():
                         msg = "{} -> {}".format(key, val)
