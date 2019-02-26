@@ -52,7 +52,7 @@ THE_INPUT_SHAPE = (IMG_SIZE[0], IMG_SIZE[1], 3)
 if DEVELOP_MODE:
     NR_EPOCHS_TO_TRAIN = 1
 else:
-    NR_EPOCHS_TO_TRAIN = 20
+    NR_EPOCHS_TO_TRAIN = 10
 
 # prepare a logger
 LOG_FILENAME = "logfile.html"
@@ -207,14 +207,16 @@ def prepare_train_and_test_matrices(bikes_images, cars_images):
 
 
 
-def build_a_cnn_model(nr_layers, dropout_rate, kernel_side_len, nr_filter):
+def build_a_cnn_model(nr_layers, dropout_rate, kernel_side_len, kernel_stride, nr_filter):
 
     model = Sequential()
 
     # Feature hierarchy:
     for layer_nr in range(nr_layers):
 
-        model.add(Conv2D(nr_filter, kernel_size=(kernel_side_len, kernel_side_len), strides=(1, 1),
+        model.add(Conv2D(nr_filter,
+                         kernel_size=(kernel_side_len, kernel_side_len),
+                         strides=(kernel_stride, kernel_stride),
                          activation='relu',
                          input_shape=THE_INPUT_SHAPE))
         model.add(MaxPooling2D(pool_size=(2, 2), strides=(2, 2)))
@@ -381,15 +383,15 @@ def main():
 
     # 5. Define experiment ranges
     EXP_RANGE_LAYERS = [1,2,3]
-    EXP_RANGE_DROPOUT = [0.0, 0.25, 0.5, 0.75]
+    EXP_RANGE_DROPOUT = [0.0]
     EXP_RANGE_KERNEL_SIDE_LEN = [2,4,8,16]
-    EXP_RANGE_NR_FILTERS = [32, 64, 128, 256]
+    EXP_RANGE_NR_FILTERS = [32, 64, 128, 256, 512]
 
     if DEVELOP_MODE:
-        EXP_RANGE_LAYERS = [1, 2, 3]
+        EXP_RANGE_LAYERS = [3]
         EXP_RANGE_DROPOUT = [0.0]
-        EXP_RANGE_KERNEL_SIDE_LEN = [4]
-        EXP_RANGE_NR_FILTERS = [32]
+        EXP_RANGE_KERNEL_SIDE_LEN = [2]
+        EXP_RANGE_NR_FILTERS = [512]
 
     NR_OF_EXPS_TO_CONDUCT = len(EXP_RANGE_LAYERS) * \
                             len(EXP_RANGE_DROPOUT) * \
@@ -422,10 +424,12 @@ def main():
                     my_logger.log_msg("Experiment {} of {}".format(exp_name,NR_OF_EXPS_TO_CONDUCT))
                     my_logger.log_msg("-----------------------")
                     time_start = time.time()
+                    EXP_FILTER_STRIDE = int(EXP_PARAM_KERNEL_SIDE_LEN/2)
                     exp_description_str = "Exp: " + str(experiment_nr) + \
                                           " - Layers: " + str(EXP_PARAM_NR_LAYERS) + \
                                           " - Dropout: " + str(EXP_PARAM_DROPOUT) + \
                                           " - Kernel size: " + str(EXP_PARAM_KERNEL_SIDE_LEN) + \
+                                          " - Filter stride: " + str(EXP_FILTER_STRIDE) + \
                                           " - Nr of filter: " + str(EXP_PARAM_NR_FILTER)
                     my_logger.log_msg(exp_description_str)
                     my_logger.log_msg("")
@@ -435,6 +439,7 @@ def main():
                     model = build_a_cnn_model(EXP_PARAM_NR_LAYERS,
                                               EXP_PARAM_DROPOUT,
                                               EXP_PARAM_KERNEL_SIDE_LEN,
+                                              EXP_FILTER_STRIDE,
                                               EXP_PARAM_NR_FILTER)
                     model.compile(optimizer='adam', loss='categorical_crossentropy', metrics=['accuracy'])
                     stringlist = []
@@ -444,6 +449,13 @@ def main():
 
 
                     # 6.3 Train the model
+                    # note:
+                    # A large batch size (e.g., 64) made problems due to OOM errors on
+                    # my rented PaperSpace GPU, since the tensors of shape
+                    # (batch_size, dimx, dimy, nr_filters)
+                    # became too large.
+                    # Unfortunately, a small batch size (e.g., 8) means that training time
+                    # is much slower!
                     history = model.fit(X_train, Y_train_one_hot_encoded,
                                         validation_split=0.10, batch_size=64, epochs=NR_EPOCHS_TO_TRAIN,
                                         verbose=1)
