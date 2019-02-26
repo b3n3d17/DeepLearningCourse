@@ -286,7 +286,7 @@ def test_model(model_filename, X_test, Y_test_one_hot_encoded):
 
         # 3.2 Get ground truth label for this image
         gt_label = np.argmax(Y_test_one_hot_encoded[test_img_nr])
-        my_logger.log_msg("Ground truth label is: " + str(gt_label))
+
 
         # 3.3 Let our trained model predict the class!
         img_data_as_4d_array = img_data.reshape((-1,
@@ -298,14 +298,17 @@ def test_model(model_filename, X_test, Y_test_one_hot_encoded):
         # 3.4 Get prediction result from neuron outputs
         neuron_outputs = model.predict(img_data_as_4d_array)
         predicted_label = np.argmax(neuron_outputs.reshape(-1))
-        my_logger.log_msg("Predicted label is: " + str(predicted_label))
-        my_logger.log_msg("Neuron outputs are: " + str(neuron_outputs))
+
 
         # 3.5 Log image to html logfile?
         if False:
             # Convert NumPy data back to an OpenCV image
             # order to display it correctly
             testimg = scipy.misc.toimage(img_data)
+
+            my_logger.log_msg("Neuron outputs are: " + str(neuron_outputs))
+            my_logger.log_msg("Ground truth label is: " + str(gt_label))
+            my_logger.log_msg("Predicted label is: " + str(predicted_label))
 
             plt.cla()
             plt.title("Test image {} of {}.\nGT={} vs. Predicted={}".
