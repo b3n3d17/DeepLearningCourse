@@ -70,7 +70,7 @@ def version_checks():
     my_logger.log_msg( "Your Keras version is: " + keras.__version__ )
     my_logger.log_msg( "Your OpenCV version is: " + cv2.__version__ )
 
-
+# end version_checks
 
 
 def load_and_show_a_single_test_image():
@@ -97,6 +97,8 @@ def load_and_show_a_single_test_image():
     plt.imshow(image)
     plt.title("One of the images")
     plt.show()
+
+# end load_and_show_a_single_test_image
 
 
 
@@ -137,6 +139,9 @@ def load_images(foldername):
                        " MB " )
     return images
 
+# end load_images
+
+
 
 
 def test_permutation():
@@ -147,6 +152,8 @@ def test_permutation():
     print("test_array before:", test_array)
     test_array = np.take(test_array, permut, axis=0)
     print("test_array after:", test_array)
+
+# end test_permutation
 
 
 
@@ -196,6 +203,8 @@ def prepare_train_and_test_matrices(bikes_images, cars_images):
 
     return X_train, Y_train, X_test, Y_test
 
+# end prepare_train_and_test_matrices
+
 
 
 def build_a_cnn_model(nr_layers, dropout_rate, kernel_side_len, nr_filter):
@@ -223,6 +232,8 @@ def build_a_cnn_model(nr_layers, dropout_rate, kernel_side_len, nr_filter):
     model.add(Dense(NUM_CLASSES, activation='softmax'))
 
     return model
+
+# end build_a_cnn_model
 
 
 
@@ -255,11 +266,15 @@ def plot_curves(history, exp_name):
     plt.xlabel('Epochs ', fontsize=16)
     plt.ylabel('Accuracy', fontsize=16)
     plt.title('Accuracy Curves', fontsize=16)
+    axes = plt.gca()
+    axes.set_ylim([0.0, 1.0])
 
     # log image to html logfile
     img_filename = my_logger.get_new_image_filename()
     plt.savefig( img_filename )
     my_logger.log_img_by_file( img_filename )
+
+# end plot_curves
 
 
 
@@ -333,7 +348,13 @@ def test_model(model_filename, X_test, Y_test_one_hot_encoded):
                            )
                      )
 
+    # 5. Forget the model
+    del(model)
+
+    # 6. Return the classification rate on the test data
     return classification_rate
+
+# end test_model
 
 
 
@@ -486,7 +507,12 @@ def main():
                         msg = "{} -> {}".format(key, val)
                         my_logger.log_msg( msg )
 
-
+                    # 6.12 Clear this Keras session
+                    # due to strange error message:
+                    #   TypeError: 'NoneType' object is not callable
+                    # I used the approach of Nimi42, see:
+                    # see https://github.com/tensorflow/tensorflow/issues/8652
+                    K.clear_session()
 
                 # end-for (EXP_PARAM_NR_FILTER)
 
@@ -499,11 +525,6 @@ def main():
 
     my_logger.close()
 
-    # due to strange error message:
-    #   TypeError: 'NoneType' object is not callable
-    # I used the approach of Nimi42, see:
-    # see https://github.com/tensorflow/tensorflow/issues/8652
-    K.clear_session()
 
 
 main()
