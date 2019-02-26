@@ -301,18 +301,19 @@ def test_model(model_filename, X_test, Y_test_one_hot_encoded):
         my_logger.log_msg("Predicted label is: " + str(predicted_label))
         my_logger.log_msg("Neuron outputs are: " + str(neuron_outputs))
 
-        # 3.5 Convert NumPy data back to an OpenCV image
-        # in order to display it correctly
-        testimg = scipy.misc.toimage(img_data)
+        # 3.5 Log image to html logfile?
+        if False:
+            # Convert NumPy data back to an OpenCV image
+            # order to display it correctly
+            testimg = scipy.misc.toimage(img_data)
 
-        # 3.6 Log image to html logfile
-        plt.cla()
-        plt.title("Test image {} of {}.\nGT={} vs. Predicted={}".
-                  format(test_img_nr+1, nr_test_images, gt_label, predicted_label))
-        plt.imshow(testimg)
-        my_logger.log_pyplot(plt)
+            plt.cla()
+            plt.title("Test image {} of {}.\nGT={} vs. Predicted={}".
+                      format(test_img_nr+1, nr_test_images, gt_label, predicted_label))
+            plt.imshow(testimg)
+            my_logger.log_pyplot(plt)
 
-        # 3.7 Update statistics of correct classified examples
+        # 3.6 Update statistics of correct classified examples
         if predicted_label == gt_label:
             correct_classified +=1
 
@@ -471,8 +472,10 @@ def main():
                     est_remaining_time =\
                         (NR_OF_EXPS_TO_CONDUCT-experiment_nr) * avg_exp_time
                     my_logger.log_msg("Estimated remaining time: {:.2f} seconds "
-                                      " = {:.2f} minutes".format(est_remaining_time,
-                                                                 est_remaining_time/60.0) )
+                                      " = {:.2f} minutes "
+                                      " = {:.2f} hours".format(est_remaining_time,
+                                                               est_remaining_time / 60.0,
+                                                               est_remaining_time / (60.0*60.0)))
 
                     # 6.11 Write all results into one line in log file
                     my_logger.log_msg("All experiment results so far:")
