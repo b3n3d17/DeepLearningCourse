@@ -3,6 +3,10 @@
 # ---
 # by Prof. Dr.-Ing. Jürgen Brauer, www.juergenbrauer.org
 
+# if Develop mode is activated,
+# we do not read in all the data,
+# do not do all experiments in full length
+DEVELOP_MODE = True
 
 import numpy as np
 
@@ -15,6 +19,7 @@ from keras.layers.convolutional import Conv2D, MaxPooling2D, ZeroPadding2D
 from keras.layers.normalization import BatchNormalization
 from keras.models import load_model
 from keras import backend as K
+from collections import OrderedDict
 
 
 import cv2
@@ -26,6 +31,9 @@ from os import listdir
 from os.path import isfile, join
 
 import scipy.misc
+
+# for measuring execution time of a single experiment
+import time
 
 from html_logger import html_logger
 
@@ -39,12 +47,17 @@ NUM_CLASSES = 2
 # img_height x img_width x nr_channels
 THE_INPUT_SHAPE = (IMG_SIZE[0], IMG_SIZE[1], 3)
 
-NR_EPOCHS_TO_TRAIN = 1
+if DEVELOP_MODE:
+    NR_EPOCHS_TO_TRAIN = 1
+else:
+    NR_EPOCHS_TO_TRAIN = 20
 
+# prepare a logger
 LOG_FILENAME = "logfile.html"
 my_logger = html_logger( LOG_FILENAME )
 
-exp_result_dict = {}
+# prepare a dictionary to store experiment results
+exp_result_dict = OrderedDict()
 
 
 
@@ -91,8 +104,9 @@ def load_images(foldername):
 
     # For quick testing of the rest of the code:
     # Just use the first N images
-    N = 50
-    filenames = filenames[0:N]
+    if DEVELOP_MODE:
+        N = 50
+        filenames = filenames[0:N]
 
     nr_images = len(filenames)
 
@@ -182,22 +196,28 @@ def prepare_train_and_test_matrices(bikes_images, cars_images):
 
 
 
-def build_a_cnn_model(nr_layers):
+def build_a_cnn_model(nr_layers, dropout_rate, kernel_side_len, nr_filter):
 
     model = Sequential()
 
     # Feature hierarchy:
     for layer_nr in range(nr_layers):
 
-        model.add(Conv2D(32, kernel_size=(4, 4), strides=(2, 2),
+        model.add(Conv2D(nr_filter, kernel_size=(kernel_side_len, kernel_side_len), strides=(1, 1),
                          activation='relu',
                          input_shape=THE_INPUT_SHAPE))
         model.add(MaxPooling2D(pool_size=(2, 2), strides=(2, 2)))
 
+        if dropout_rate>0.0:
+            model.add(Dropout(dropout_rate))
 
     # MLP part:
     model.add(Flatten())
+    if dropout_rate > 0.0:
+        model.add(Dropout(dropout_rate))
     model.add(Dense(50, activation='relu'))
+    if dropout_rate > 0.0:
+        model.add(Dropout(dropout_rate))
     model.add(Dense(NUM_CLASSES, activation='softmax'))
 
     return model
@@ -334,61 +354,96 @@ def main():
     experiment_nr = 0
     for EXP_PARAM_NR_LAYERS in range(1,4):
 
-        # 5.1 Write experiment info to logfile
-        experiment_nr += 1
-        exp_name = str(experiment_nr).zfill(2)
-        my_logger.log_msg("")
-        my_logger.log_msg("-----------------------")
-        my_logger.log_msg("Experiment: " + exp_name)
-        my_logger.log_msg("-----------------------")
-        my_logger.log_msg("Nr of conv/max-pool layers: " + str(EXP_PARAM_NR_LAYERS) )
-        my_logger.log_msg("")
+        #for EXP_PARAM_DROPOUT in [0.0, 0.25, 0.5, 0.75]:
+        for EXP_PARAM_DROPOUT in [0.0]:
+
+            #for EXP_PARAM_KERNEL_SIDE_LEN in [2,4,8,16]:
+            for EXP_PARAM_KERNEL_SIDE_LEN in [4]:
+
+                #for EXP_PARAM_NR_FILTER in [32,64,128,256]:
+                for EXP_PARAM_NR_FILTER in [32]:
+
+                    # 5.1 Write experiment info to logfile
+                    experiment_nr += 1
+                    exp_name = str(experiment_nr).zfill(2)
+                    my_logger.log_msg("")
+                    my_logger.log_msg("-----------------------")
+                    my_logger.log_msg("Experiment: " + exp_name)
+                    my_logger.log_msg("-----------------------")
+                    time_start = time.time()
+                    exp_description_str = "Exp: " + str(experiment_nr) + \
+                                          " - Layers: " + str(EXP_PARAM_NR_LAYERS) + \
+                                          " - Dropout: " + str(EXP_PARAM_DROPOUT) + \
+                                          " - Kernel size: " + str(EXP_PARAM_KERNEL_SIDE_LEN) + \
+                                          " - Nr of filter: " + str(EXP_PARAM_NR_FILTER)
+                    my_logger.log_msg(exp_description_str)
+                    my_logger.log_msg("")
 
 
-        # 5.2 Build a CNN model
-        model = build_a_cnn_model(EXP_PARAM_NR_LAYERS)
-        model.compile(optimizer='adam', loss='categorical_crossentropy', metrics=['accuracy'])
-        stringlist = []
-        model.summary(print_fn=lambda x: stringlist.append(x))
-        short_model_summary = "\n<br>".join(stringlist)
-        my_logger.log_msg( short_model_summary )
+                    # 5.2 Build a CNN model
+                    model = build_a_cnn_model(EXP_PARAM_NR_LAYERS,
+                                              EXP_PARAM_DROPOUT,
+                                              EXP_PARAM_KERNEL_SIDE_LEN,
+                                              EXP_PARAM_NR_FILTER)
+                    model.compile(optimizer='adam', loss='categorical_crossentropy', metrics=['accuracy'])
+                    stringlist = []
+                    model.summary(print_fn=lambda x: stringlist.append(x))
+                    short_model_summary = "\n<br>".join(stringlist)
+                    my_logger.log_msg( short_model_summary )
 
 
-        # 5.3 Train the model
-        history = model.fit(X_train, Y_train_one_hot_encoded,
-                            validation_split=0.90, batch_size=64, epochs=NR_EPOCHS_TO_TRAIN)
+                    # 5.3 Train the model
+                    history = model.fit(X_train, Y_train_one_hot_encoded,
+                                        validation_split=0.10, batch_size=64, epochs=NR_EPOCHS_TO_TRAIN,
+                                        verbose=1)
 
 
-        # 5.4 Save the model
-        model_filename = "exp_" + exp_name + ".keras_model"
-        if os.path.exists(model_filename):
-            os.remove(model_filename)
-        my_logger.log_msg( "Saving model to file " + model_filename )
-        model.save( model_filename, overwrite=True )
+                    # 5.4 Save the model
+                    model_filename = "exp_" + exp_name + ".keras_model"
+                    if os.path.exists(model_filename):
+                        os.remove(model_filename)
+                    my_logger.log_msg( "Saving model to file " + model_filename )
+                    model.save( model_filename, overwrite=True )
 
 
-        # 5.5 Plot curves
-        plot_curves(history, exp_name)
+                    # 5.5 Plot curves
+                    plot_curves(history, exp_name)
 
 
-        # 5.6 Forget the model
-        del(model)
+                    # 5.6 Forget the model
+                    del(model)
 
 
-        # 5.7 Test the model
-        classification_rate = test_model(model_filename, X_test, Y_test_one_hot_encoded)
+                    # 5.7 Test the model
+                    classification_rate = test_model(model_filename, X_test, Y_test_one_hot_encoded)
 
 
-        # 5.8 Save classification rate
-        exp_result_dict[experiment_nr] = classification_rate
+                    # 5.8 Save classification rate
+                    exp_result_dict[exp_description_str] = classification_rate
 
 
-        # 5.9 Write all results into one line in log file
-        my_logger.log_msg("All experiment results so far:")
-        for key, val in exp_result_dict.items():
-            msg = "{} -> {}".format(key, val)
-            my_logger.log_msg( msg )
+                    # 5.9 Show experiment end time and experiment duration
+                    time_end = time.time()
+                    exp_duration_sec = time_end - time_start
+                    my_logger.log_msg("Experiment " +
+                                      exp_name +
+                                      " duration: {:.2f} seconds".format(exp_duration_sec) +
+                                      " seconds = {:.2f} minutes".format(exp_duration_sec/60)
+                                      )
 
+                    # 5.10 Write all results into one line in log file
+                    my_logger.log_msg("All experiment results so far:")
+                    for key, val in exp_result_dict.items():
+                        msg = "{} -> {}".format(key, val)
+                        my_logger.log_msg( msg )
+
+
+
+                # end-for (EXP_PARAM_NR_FILTER)
+
+            # end-for (EXP_PARAM_KERNEL_SIDE_LEN)
+
+        # end-for (EXP_PARAM_DROPOUT)
 
     # end-for (EXP_PARAM_NR_LAYERS)
 

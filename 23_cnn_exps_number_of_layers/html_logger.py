@@ -53,6 +53,8 @@ class html_logger:
             # output message to console
             #print( complete_msg )
 
+        self.logfile.flush()
+
 
     # log a whole plot
     def log_pyplot(self, plt):
@@ -60,12 +62,14 @@ class html_logger:
         img_filename = self.get_new_image_filename()
         plt.savefig(img_filename)
         self.log_img_by_file(img_filename)
+        self.logfile.flush()
 
 
     # log an image that already exists as  file
     def log_img_by_file(self, filename):
 
         self.logfile.write('<img src="' + filename + '"><br><br>\n')
+        self.logfile.flush()
 
 
     # get a new image log filename
