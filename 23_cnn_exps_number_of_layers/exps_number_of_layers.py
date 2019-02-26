@@ -378,6 +378,7 @@ def main():
 
     # 6. Do experiments!
     experiment_nr = 0
+    experiment_times = []
     for EXP_PARAM_NR_LAYERS in EXP_RANGE_LAYERS:
 
         for EXP_PARAM_DROPOUT in EXP_RANGE_DROPOUT:
@@ -450,9 +451,20 @@ def main():
                     exp_duration_sec = time_end - time_start
                     my_logger.log_msg("Experiment " +
                                       exp_name +
-                                      " duration: {:.2f} seconds".format(exp_duration_sec) +
-                                      " seconds = {:.2f} minutes".format(exp_duration_sec/60)
+                                      " duration: {:.2f} seconds".
+                                      format(exp_duration_sec) +
+                                      " seconds = {:.2f} minutes".
+                                      format(exp_duration_sec/60)
                                       )
+                    experiment_times.append( exp_duration_sec )
+                    avg_exp_time = sum(experiment_times) / float(experiment_nr)
+                    my_logger.log_msg("Average experiment time: {:.2f} seconds".
+                                      format(avg_exp_time) )
+                    est_remaining_time =\
+                        (NR_OF_EXPS_TO_CONDUCT-experiment_nr) * avg_exp_time
+                    my_logger.log_msg("Estimated remaining time: {:.2f} seconds "
+                                      " = {:.2f} minutes".format(est_remaining_time,
+                                                                 est_remaining_time/60.0) )
 
                     # 6.10 Write all results into one line in log file
                     my_logger.log_msg("All experiment results so far:")
