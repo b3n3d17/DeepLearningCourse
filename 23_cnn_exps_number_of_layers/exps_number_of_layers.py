@@ -382,10 +382,10 @@ def main():
 
 
     # 5. Define experiment ranges
-    EXP_RANGE_LAYERS = [1,2,3]
+    EXP_RANGE_LAYERS = [3,2,1]
     EXP_RANGE_DROPOUT = [0.0]
     EXP_RANGE_KERNEL_SIDE_LEN = [2,4,8,16]
-    EXP_RANGE_NR_FILTERS = [32, 64, 128, 256, 512]
+    EXP_RANGE_NR_FILTERS = [512, 256, 128, 64, 32, 16]
 
     if DEVELOP_MODE:
         EXP_RANGE_LAYERS = [3]
@@ -457,7 +457,7 @@ def main():
                     # Unfortunately, a small batch size (e.g., 8) means that training time
                     # is much slower!
                     history = model.fit(X_train, Y_train_one_hot_encoded,
-                                        validation_split=0.10, batch_size=64, epochs=NR_EPOCHS_TO_TRAIN,
+                                        validation_split=0.10, batch_size=8, epochs=NR_EPOCHS_TO_TRAIN,
                                         verbose=1)
 
 
