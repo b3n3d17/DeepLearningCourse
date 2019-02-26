@@ -76,7 +76,7 @@ class html_logger:
     def get_new_image_filename(self):
 
         self.next_image_nr += 1
-        new_image_filename = LOG_IMG_DIR + "\\img_" + str(self.next_image_nr).zfill(5) + ".png"
+        new_image_filename = LOG_IMG_DIR + "/img_" + str(self.next_image_nr).zfill(5) + ".png"
         return new_image_filename
 
 

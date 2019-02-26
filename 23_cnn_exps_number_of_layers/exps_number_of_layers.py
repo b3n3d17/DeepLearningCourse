@@ -352,25 +352,46 @@ def main():
     Y_test_one_hot_encoded = to_categorical(Y_test)
 
 
-    # 5. Do experiments!
+    # 5. Define experiment ranges
+    EXP_RANGE_LAYERS = [0,1,2,3]
+    EXP_RANGE_DROPOUT = [0.0, 0.25, 0.5, 0.75]
+    EXP_RANGE_KERNEL_SIDE_LEN = [2,4,8,16]
+    EXP_RANGE_NR_FILTERS = [32, 64, 128, 256]
+
+    if DEVELOP_MODE:
+        EXP_RANGE_LAYERS = [1, 2, 3]
+        EXP_RANGE_DROPOUT = [0.0]
+        EXP_RANGE_KERNEL_SIDE_LEN = [4]
+        EXP_RANGE_NR_FILTERS = [32]
+
+    NR_OF_EXPS_TO_CONDUCT = len(EXP_RANGE_LAYERS) * \
+                            len(EXP_RANGE_DROPOUT) * \
+                            len(EXP_RANGE_KERNEL_SIDE_LEN) * \
+                            len(EXP_RANGE_NR_FILTERS)
+    my_logger.log_msg( "I will conduct {} experiments in total.".
+                       format(NR_OF_EXPS_TO_CONDUCT) )
+    my_logger.log_msg("Range of layers I will try: " + str(EXP_RANGE_LAYERS))
+    my_logger.log_msg("Range of dropout rates I will try: " + str(EXP_RANGE_DROPOUT))
+    my_logger.log_msg("Range of kernel side lengths I will try: " + str(EXP_RANGE_KERNEL_SIDE_LEN))
+    my_logger.log_msg("Range of nr of filters per layer I will try: " + str(EXP_RANGE_NR_FILTERS))
+
+
+    # 6. Do experiments!
     experiment_nr = 0
-    for EXP_PARAM_NR_LAYERS in range(1,4):
+    for EXP_PARAM_NR_LAYERS in EXP_RANGE_LAYERS:
 
-        #for EXP_PARAM_DROPOUT in [0.0, 0.25, 0.5, 0.75]:
-        for EXP_PARAM_DROPOUT in [0.0]:
+        for EXP_PARAM_DROPOUT in EXP_RANGE_DROPOUT:
 
-            #for EXP_PARAM_KERNEL_SIDE_LEN in [2,4,8,16]:
-            for EXP_PARAM_KERNEL_SIDE_LEN in [4]:
+            for EXP_PARAM_KERNEL_SIDE_LEN in EXP_RANGE_KERNEL_SIDE_LEN:
 
-                #for EXP_PARAM_NR_FILTER in [32,64,128,256]:
-                for EXP_PARAM_NR_FILTER in [32]:
+                for EXP_PARAM_NR_FILTER in EXP_RANGE_NR_FILTERS:
 
-                    # 5.1 Write experiment info to logfile
+                    # 6.1 Write experiment info to logfile
                     experiment_nr += 1
-                    exp_name = str(experiment_nr).zfill(2)
+                    exp_name = str(experiment_nr).zfill(4)
                     my_logger.log_msg("")
                     my_logger.log_msg("-----------------------")
-                    my_logger.log_msg("Experiment: " + exp_name)
+                    my_logger.log_msg("Experiment {} of {}".format(exp_name,NR_OF_EXPS_TO_CONDUCT))
                     my_logger.log_msg("-----------------------")
                     time_start = time.time()
                     exp_description_str = "Exp: " + str(experiment_nr) + \
@@ -382,7 +403,7 @@ def main():
                     my_logger.log_msg("")
 
 
-                    # 5.2 Build a CNN model
+                    # 6.2 Build a CNN model
                     model = build_a_cnn_model(EXP_PARAM_NR_LAYERS,
                                               EXP_PARAM_DROPOUT,
                                               EXP_PARAM_KERNEL_SIDE_LEN,
@@ -394,13 +415,13 @@ def main():
                     my_logger.log_msg( short_model_summary )
 
 
-                    # 5.3 Train the model
+                    # 6.3 Train the model
                     history = model.fit(X_train, Y_train_one_hot_encoded,
                                         validation_split=0.10, batch_size=64, epochs=NR_EPOCHS_TO_TRAIN,
                                         verbose=1)
 
 
-                    # 5.4 Save the model
+                    # 6.4 Save the model
                     model_filename = "exp_" + exp_name + ".keras_model"
                     if os.path.exists(model_filename):
                         os.remove(model_filename)
@@ -408,23 +429,23 @@ def main():
                     model.save( model_filename, overwrite=True )
 
 
-                    # 5.5 Plot curves
+                    # 6.5 Plot curves
                     plot_curves(history, exp_name)
 
 
-                    # 5.6 Forget the model
+                    # 6.6 Forget the model
                     del(model)
 
 
-                    # 5.7 Test the model
+                    # 6.7 Test the model
                     classification_rate = test_model(model_filename, X_test, Y_test_one_hot_encoded)
 
 
-                    # 5.8 Save classification rate
+                    # 6.8 Save classification rate
                     exp_result_dict[exp_description_str] = classification_rate
 
 
-                    # 5.9 Show experiment end time and experiment duration
+                    # 6.9 Show experiment end time and experiment duration
                     time_end = time.time()
                     exp_duration_sec = time_end - time_start
                     my_logger.log_msg("Experiment " +
@@ -433,7 +454,7 @@ def main():
                                       " seconds = {:.2f} minutes".format(exp_duration_sec/60)
                                       )
 
-                    # 5.10 Write all results into one line in log file
+                    # 6.10 Write all results into one line in log file
                     my_logger.log_msg("All experiment results so far:")
                     for key, val in exp_result_dict.items():
                         msg = "{} -> {}".format(key, val)
