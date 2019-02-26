@@ -341,14 +341,9 @@ def test_model(model_filename, X_test, Y_test_one_hot_encoded):
     # 4. Compute classification rate
     classification_rate = float(correct_classified) / float(nr_test_images)
     my_logger.log_msg( "Test results: " +
-                       "Correct classified: " +
-                       str(correct_classified) +
-                       " of " +
-                       str(nr_test_images) +
-                       " --> classification rate: " +
-                       str(classification_rate
-                           )
-                     )
+                       "Correct classified: {}".format(correct_classified) +
+                       " of {}".format(nr_test_images) +
+                       " --> classification rate: {:.2f}".format(classification_rate))
 
     # 5. Forget the model
     del(model)
@@ -391,7 +386,7 @@ def main():
         EXP_RANGE_LAYERS = [3]
         EXP_RANGE_DROPOUT = [0.0]
         EXP_RANGE_KERNEL_SIDE_LEN = [2]
-        EXP_RANGE_NR_FILTERS = [512]
+        EXP_RANGE_NR_FILTERS = [32]
 
     NR_OF_EXPS_TO_CONDUCT = len(EXP_RANGE_LAYERS) * \
                             len(EXP_RANGE_DROPOUT) * \
@@ -516,7 +511,7 @@ def main():
                     # 6.11 Write all results into one line in log file
                     my_logger.log_msg("All experiment results so far:")
                     for key, val in exp_result_dict.items():
-                        msg = "{} -> {}".format(key, val)
+                        msg = "{} -> {:.2f}".format(key, val)
                         my_logger.log_msg( msg )
 
                     # 6.12 Clear this Keras session
