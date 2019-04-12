@@ -52,7 +52,7 @@ THE_INPUT_SHAPE = (IMG_SIZE[0], IMG_SIZE[1], 3)
 if DEVELOP_MODE:
     NR_EPOCHS_TO_TRAIN = 1
 else:
-    NR_EPOCHS_TO_TRAIN = 10
+    NR_EPOCHS_TO_TRAIN = 15
 
 # prepare a logger
 LOG_FILENAME = "logfile.html"
@@ -379,7 +379,7 @@ def main():
     # 5. Define experiment ranges
     EXP_RANGE_LAYERS = [3,2,1]
     EXP_RANGE_DROPOUT = [0.0]
-    EXP_RANGE_KERNEL_SIDE_LEN = [2,4,8,16]
+    EXP_RANGE_KERNEL_SIDE_LEN = [8,4,2]
     EXP_RANGE_NR_FILTERS = [128, 64, 32, 16]
 
     if DEVELOP_MODE:
@@ -419,7 +419,7 @@ def main():
                     my_logger.log_msg("Experiment {} of {}".format(exp_name,NR_OF_EXPS_TO_CONDUCT))
                     my_logger.log_msg("-----------------------")
                     time_start = time.time()
-                    EXP_FILTER_STRIDE = int(EXP_PARAM_KERNEL_SIDE_LEN/2)
+                    EXP_FILTER_STRIDE = 2
                     exp_description_str = "Exp: " + str(experiment_nr) + \
                                           " - Layers: " + str(EXP_PARAM_NR_LAYERS) + \
                                           " - Dropout: " + str(EXP_PARAM_DROPOUT) + \
