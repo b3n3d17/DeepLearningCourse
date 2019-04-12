@@ -1,2 +1,2 @@
 # DeepLearningCourse
-A course I am developing to teach students the most important Deep Learning models and their implementation in Python and Keras.
+A course I am developing to teach students the most important Deep Learning models and their implementation in Python, TensorFlow and Keras.
